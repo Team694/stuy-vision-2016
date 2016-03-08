@@ -26,7 +26,9 @@ public class ModuleRunner {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true) {
+                while (true)
+                {
+                    System.out.println("In iteration of ModuleRunner loop");
                     for (CaptureSourceToVisionModuleMapper captureSourceMap : sourceDestMap) {
                         if (captureSourceMap.captureSource.isOpened()) {
                             Mat frame = captureSourceMap.captureSource.read();

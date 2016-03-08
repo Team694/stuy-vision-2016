@@ -22,6 +22,10 @@ public abstract class CaptureSource {
         if (success) {
             int frameHeight = frame.height();
             int frameWidth = frame.width();
+            System.out.println("FRAME DIMESNSIONS::::::::::::::::::::::::::" + frameHeight + ", " + frameWidth);
+            if (frameHeight == 0 || frameWidth == 0) {
+                return null;
+            }
             double resizeRatio = (double) maxImageDimension / Math.max(frameHeight, frameWidth);
             Size desiredSize = new Size(frameWidth * resizeRatio, frameHeight * resizeRatio);
             Mat resizedFrame = new Mat();

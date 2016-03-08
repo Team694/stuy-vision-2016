@@ -28,14 +28,14 @@ public class StuyVisionModule extends VisionModule {
     // Thresholds for filtering image input
     // These are held in slider variables as when using the gui it is useful for them
     // to be tweakable, and when running on the Tegra they have insignificant overhead
-    public IntegerSliderVariable minH_GREEN = new IntegerSliderVariable("Min H Green", 58,  0,  255);
-    public IntegerSliderVariable maxH_GREEN = new IntegerSliderVariable("Max H Green", 123,  0,  255);
+    public IntegerSliderVariable minH_GREEN = new IntegerSliderVariable("Min H Green", 59,  0,  255);
+    public IntegerSliderVariable maxH_GREEN = new IntegerSliderVariable("Max H Green", 103,  0,  255);
 
-    public IntegerSliderVariable minS_GREEN = new IntegerSliderVariable("Min S Green", 104, 0, 255);
-    public IntegerSliderVariable maxS_GREEN = new IntegerSliderVariable("Max S Green", 255,  0,  255);
+    public IntegerSliderVariable minS_GREEN = new IntegerSliderVariable("Min S Green", 0, 0, 255);
+    public IntegerSliderVariable maxS_GREEN = new IntegerSliderVariable("Max S Green", 217,  0,  255);
 
-    public IntegerSliderVariable minV_GREEN = new IntegerSliderVariable("Min V Green", 20,  0,  255);
-    public IntegerSliderVariable maxV_GREEN = new IntegerSliderVariable("Max V Green", 155, 0, 255);
+    public IntegerSliderVariable minV_GREEN = new IntegerSliderVariable("Min V Green", 63,  0,  255);
+    public IntegerSliderVariable maxV_GREEN = new IntegerSliderVariable("Max V Green", 255, 0, 255);
 
     // Thresholds regarding the geometry of the bounding box of the region found by the HSV filtering
     public DoubleSliderVariable minAreaThreshold = new DoubleSliderVariable("Min Area Threshold", 200.0, 0.0, 700.0);
@@ -81,7 +81,9 @@ public class StuyVisionModule extends VisionModule {
 
     // For running as a JavaFX gui
     public Object run(Main app, Mat frame) {
+        System.out.println("IN RUN");
         app.postImage(frame, "Camera", this);
+        System.out.println("posted image");
         double[] vectorToGoal = hsvThresholding(frame, app);
         printVectorInfo(vectorToGoal, logWriter);
         return vectorToGoal;
@@ -120,21 +122,21 @@ public class StuyVisionModule extends VisionModule {
             }
             MatOfPoint2f tmp = new MatOfPoint2f();
             contours.get(i).convertTo(tmp, CvType.CV_32FC1);
-            RotatedRect r = Imgproc.minAreaRect(tmp);
-            if (!aspectRatioThreshold(r.size.height, r.size.width)) {
+            RotatedRect boundingRect = Imgproc.minAreaRect(tmp);
+            if (!aspectRatioThreshold(boundingRect.size.height, boundingRect.size.width)) {
                 continue;
             }
             if (withGui) {
                 // Draw this bounding rectangle onto `drawn`
                 Point[] points = new Point[4];
-                r.points(points);
+                boundingRect.points(points);
                 for (int line = 0; line < 4; line++) {
                     Imgproc.line(drawn, points[line], points[(line + 1) % 4], new Scalar(0, 255, 0));
                 }
             }
             if (currArea > largestArea) {
                 largestArea = currArea;
-                largestRect = r;
+                largestRect = boundingRect;
             }
         }
 
@@ -199,6 +201,8 @@ public class StuyVisionModule extends VisionModule {
         // If `app` is null, we will not try to post images to it
         boolean withGui = app != null;
 
+        //Imgcoc
+
         // Convert BGR camera image to HSV for processing
         Mat hsv = new Mat();
         Imgproc.cvtColor(frame, hsv, Imgproc.COLOR_BGR2HSV);
@@ -213,6 +217,12 @@ public class StuyVisionModule extends VisionModule {
         Core.inRange(greenFilterChannels.get(2), new Scalar(minV_GREEN.value()), new Scalar(maxV_GREEN.value()),
                 greenFilterChannels.get(2));
 
+        for (int i = 0; i < greenFilterChannels.size(); i += 1) {
+            if (withGui) {
+                app.postImage(greenFilterChannels.get(i), "Channel " + i, this);
+            }
+        }
+
         // Merge filtered H, S and V back into one binarized image
         Mat greenFiltered = new Mat();
         Core.bitwise_and(greenFilterChannels.get(0), greenFilterChannels.get(1), greenFiltered);
@@ -225,6 +235,9 @@ public class StuyVisionModule extends VisionModule {
         Mat erodeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
         Mat dilateKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9, 9));
         Imgproc.erode(greenFiltered, greenFiltered, erodeKernel);
+        if (withGui) {
+            app.postImage(greenFiltered, "After erode", this);
+        }
         Imgproc.dilate(greenFiltered, greenFiltered, dilateKernel);
         if (withGui) {
             app.postImage(greenFiltered, "After erode/dilate", this);
