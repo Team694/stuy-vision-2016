@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd "/home/ubuntu/cv/stuy-vision-2016"
-ant # Compiles and runs
+ant # Configures the camera, compiles, and runs
