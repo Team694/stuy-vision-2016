@@ -1,7 +1,10 @@
 Stuy Vision 2016
 ================
 
-This is our CV project for FRC 2016: Stronghold.
+This was the beginning our CV project for FRC 2016: Stronghold. Work was
+transferred to our robot [DEStiny](https://github.com/Team694/DEStiny)'s
+repository when we chose to run the computer vision on the roboRIO, rather
+than on a Jetson TK1.
 
 Forked and made using an alumni's project, inspired by [CUAUV](https://github.com/cuauv)'s auv-vision-gui
 
